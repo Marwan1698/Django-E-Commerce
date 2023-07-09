@@ -1,3 +1,6 @@
+{% extends 'base.html' %}
+{% load static %}
+
 <!DOCTYPE html>
 <html>
 
@@ -6,12 +9,21 @@
 </head>
 
 <body>
-    <h1>Add Item</h1>
-    <form method="POST" enctype="multipart/form-data"> {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Save</button>
-        <button type="reset">Reset</button>
-    </form>
+    {% block title_block %}
+    {% endblock %}
+
+    {% block main_block %}
+    <div class = "container"style="margin: 7%;   ">
+        <h1 class="dark">Add Item</h1>
+        <form method="POST" enctype="multipart/form-data" class="border p-3"> {% csrf_token %}
+            {{ form.as_p }} 
+            <button type="submit" class="btn btn-info">Save</button>
+            <button type="reset" class="btn btn-danger">Reset</button>
+        </form>
+    </div>
+
+    {% endblock %}
+
 </body>
 
 </html>
