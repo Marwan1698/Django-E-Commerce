@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  {% block title_block %}
+  {% endblock %}
+
+  {% block main_block %}
+  <div style="margin: 5% auto; width: 80%; margin-bottom: 15%;">
+    <div class="text-info col-md-5" style="padding-left: 13%;">
+      <h2>Order Details</h2>
+      <!-- <hr style="width: 5%; border-style: solid; font-weight: bold;"> -->
+    </div>
+    <div>
+      <table class="table table-striped mx-auto table-dark table-hover w-75 justify-content-center">
+        <thead>
+          <tr style="text-align: center">
+            <th scope="col">Product</th>
+            <th scope="col">Price</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Total</th>
+        </tr>
+        </thead>
+        <tbody style="text-align: center">
+          {% for cart_item in cart_items %}
+          <tr>
+              <td>{{ cart_item.item.name }}</td>
+              <td>${{ cart_item.item.price }}</td>
+              <td>{{ cart_item.item_quantity }}</td>
+              <td>${% widthratio cart_item.item_quantity 1 cart_item.item.price %}</td>
+          </tr>
+          {% endfor %}
+          <tr>
+              <td></td>
+              <td></td>
+              <td>Total Price</td>
+              <td>${{ total_price }}</td>
+              <td></td>
+          </tr>
+      </tbody>
+      </table>
+
+
+    </div>
+  </div>
+  {% endblock %}
+
+</body>
+
+</html>

@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>South Side</title>
+  <link rel="stylesheet" href="{% static '/css/style.css' %}">
+</head>
+
+
+<body>
+  <!-- category filter form -->
+  {% block title_block %}
+    {% endblock %}
+
+    {% block main_block %}
+
+    <ul class="nav nav-tabs navbar-expand-lg justify-content-center" style="background-color: rgb(205, 203, 203); margin-top: 4.2%;">
+      <li class="nav-item">
+        <a class="nav-link active" href="{% url 'e-home' %}" aria-current="page" href="#">All</a>
+      </li>
+    
+      {% for category in categories %}
+      <li class="nav-item">
+          <a class="nav-link" href="{% url 'e-home' %}?category={{ category.id }}">{{ category.name }}</a>
+      </li>     
+      {% endfor %}
+      <li class="nav-item">
+        <a class="nav-link active" href="{% url 'e-home' %}?user={{ request.user.id }}">Your Products</a>
+      </li>
+    </ul> 
+<!-- 
+  <form method="GET">
+    <label for="category">Filter by category:</label>
+    <select name="category" id="category">
+      <option value="">All categories</option>
+      {% for category in categories %}
+      <option value="{{ category.id }}">{{ category.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Apply</button>
+  </form> -->
+
+  {% if messages %}
+  {% for message in messages %}
+  <script>
+      alert("{{ message }}");
+  </script>
+  {% endfor %}
+  {% endif %}
+
+  {%if items%}
+  <!-- products data start -->
+  <div class="row">
+
+    {% for i in items %}
+    {% if not request.GET.category and not request.GET.user or i.category.id == request.GET.category|default:"0"|add:"0" or i.customer.id == request.GET.user|default:"0"|add:"0" %}
+    <!-- card1 -->
+    <div class="column">
+      <div class="container page-wrapper" style="width: 450px;">
+        <div class="page-inner">
+          <div class="row">
+            <div class="el-wrapper">
+              <div class="box-up">
+                <img class="img" src="{{ i.image.url }}" alt="item pic" height="300px" width="300px">
+                <div class="img-info">
+                  <div class="info-inner">
+                    <span class="p-company">{{i.name}}</span>
+
+                  </div>
+                  <div class="a-size">{{i.description}}</div>
+                </div>
+              </div>
+
+              <div class="box-down">
+                <div class="h-bg">
+                  <div class="h-bg-inner"></div>
+                </div>
+
+                <a class="cart">
+                  <span class="price">${{i.price}}</span>
+                  <span class="add-to-cart">
+                    <div class="cart-form-container">
+                      <form action="{% url 'removefromcart' it_id=i.id %}" method="POST" class="cart-form"> {%csrf_token%}
+                        <button type="submit" class="minus"><i class="fa fa-minus"></i></button>
+                      </form>
+                      <form action="{% url 'addtocart' it_id=i.id %}" method="POST" class="cart-form"> {% csrf_token %}
+                        <button type="submit" style="width: 120px;" class="add"><i class="fa fa-shopping-cart"></i> Add To Cart {{ quantity }}</button>
+                      </form>
+                      <form action="{% url 'addtocart' it_id=i.id %}" method="POST" class="cart-form"> {% csrf_token %}
+                        <button type="submit" class="plus"><i class="fa fa-plus"></i></button>
+                      </form>
+                    </div>
+                  </span>
+                </a>
+                <!-- <a class="cart">
+
+                  <span class="price">${{i.price}}</span>
+                  <span class="add-to-cart">
+                    <span class="txt">
+                      <form action="{% url 'removefromcart' it_id=i.id %}" method="POST"> {% csrf_token %}
+                        <button class="minus">-</button>
+                      </form>
+                      <i class="fa fa-shopping-cart"></i> Add To Cart
+                      <form action="{% url 'addtocart' it_id=i.id %}" method="POST"> {% csrf_token %}
+                        <button class="plus">+</button>
+                      </form>
+                    </span>
+
+                  </span>
+                </a> -->
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- card1 end -->
+    {% if forloop.counter|divisibleby:"3" %}
+  </div>
+  <div class="row">
+    <br><br><br><br><br>
+    {% endif %}
+    {% endif %}
+    {% endfor %}
+  </div>
+  <!-- products data end -->
+
+
+  {%else%}
+  <h3 style="text-align:center; color:#3E454C;">No items Found</h3>
+  {%endif%}
+  <!-- 
+  <script>
+      {%if messages %}
+      {%for message in messages%}
+      alert('{{message}}');
+      {%endfor%}
+      {%endif%}
+  </script> -->
+
+  <script></script>
+  <br><br><br>
+  <br><br><br><br><br><br><br><br><br><br><br><br>
+  {% endblock %}
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  {% block title_block %}
+  {% endblock %}
+
+  {% block main_block %}
+  <div style="margin: 5% auto; width: 80%; margin-bottom: 15%;">
+    <div class="text-center text-info ">
+      <h2>Orders</h2>
+      <hr style="width: 5%; border-style: solid; font-weight: bold;">
+    </div>
+    <div>
+      <table class="table table-striped mx-auto table-dark table-hover w-75 justify-content-center">
+        <thead>
+          <tr style="text-align: center">
+            <th scope="col">Order ID</th>
+            <th scope="col">Number of Items</th>
+            <th scope="col">Total Price</th>
+            <th scope="col">Address</th>
+            <th scope="col">Status</th>
+            <th colspan="2">Actions</th>
+          </tr>
+        </thead>
+        <tbody style="text-align: center">
+          {% for order in orders %}
+          <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.cart.numOfItems }}</td>
+            <td>{{ order.cart.total_price }}</td>
+            <td>{{ order.address }}</td>
+            <td>{{ order.status }}</td>
+            <td><a class="btn btn-danger" href="{% url 'orderDetails' order.id %}">Show Details</a></td>
+            <td><a class="btn btn-danger" href="{% url 'deleteOrder' order.id %}">Cancel Order</a></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+      </table>
+
+
+    </div>
+  </div>
+  {% endblock %}
+
+</body>
+
+</html>
