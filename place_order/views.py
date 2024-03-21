@@ -51,15 +51,17 @@ def removefromcart(request, it_id):
 
 @login_required(login_url='login')
 def viewCart(request):
-    icart = Cart.objects.get(customer = request.user, status = 'new')
-    if icart.status == 'new':
-        cart_items = CartItem.objects.filter(cart=icart)
-        total_price = sum(cart_item.item.price * cart_item.item_quantity for cart_item in cart_items)
-        context = {'cart_items': cart_items, 'cart': icart, 'total_price': total_price}
-        return render(request, 'place_order/cart.html', context)
-    else:
+    try:
+        icart = Cart.objects.get(customer=request.user, status='new')
+    except Cart.DoesNotExist:
         messages.error(request, "Your shopping cart is empty!")
         return redirect('e-home')
+
+    cart_items = CartItem.objects.filter(cart=icart)
+    total_price = sum(cart_item.item.price * cart_item.item_quantity for cart_item in cart_items)
+
+    context = {'cart_items': cart_items, 'cart': icart, 'total_price': total_price}
+    return render(request, 'place_order/cart.html', context)
 
 def deleteItemfromCart(request, it_id):
     item = Item.objects.get(id = it_id)
@@ -70,6 +72,8 @@ def deleteItemfromCart(request, it_id):
 
     cart.numOfItems -= cart_item.item_quantity
     cart.total_price -= cart_item.item_quantity * item.price
+    item.quantity += cart_item.item_quantity
+    item.save()
     cart.save()
     cart_item.delete()
     return redirect('viewCart')

@@ -9,7 +9,9 @@ def addItem(request):
     if request.method == 'POST':
         form = ItemForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            item = form.save(commit=False)
+            item.customer = request.user  # Assign the current user to the customer field
+            item.save()
             return redirect('e-home')
     else:
         form = ItemForm()
@@ -20,7 +22,7 @@ def addItem(request):
 def editItem(request, it_id):
     item = Item.objects.get(id = it_id)
     if request.method == 'POST':
-        form = ItemForm(request.POST, instance=item)
+        form = ItemForm(request.POST, request.FILES, instance=item)
         if form.is_valid():
             form.save()
             return redirect('manage_items')

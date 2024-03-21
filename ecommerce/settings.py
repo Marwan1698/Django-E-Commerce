@@ -82,8 +82,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ecomdb',
-        'USER': 'marwan',
-        'PASSWORD': 'my1698'
+        'USER': 'root',
+        'PASSWORD': 'root1234'
     }
 }
 
