@@ -1,12 +1,13 @@
-# Django E-Commerce (v2)
+# Bazario
 
-A marketplace-style store: anyone can browse, signed-in users can sell their own
-products, add others' products to a cart and check out.
+**Buy and sell, all in one place.** Bazario is an open marketplace: anyone
+can browse, and signed-in users can list their own products, add other
+people's products to a cart and check out.
 
-v2 is a rewrite of the original Django-templates app into:
+(Formerly "South Side", the original Django-templates version on `main`.)
 
 - **`backend/`**: Django 5.2 LTS + Django REST Framework JSON API
-- **`frontend/`**: React + Vite + TypeScript single-page app
+- **`frontend/`**: React + Vite single-page app (JavaScript, function components)
 
 Deploying for free (Render + Neon): see **[DEPLOY.md](DEPLOY.md)**.
 
@@ -21,6 +22,31 @@ npm run dev          # http://localhost:5173 (forwards /api and /media to Django
 ```
 
 Frontend checks: `npm run lint`, `npm test`, `npm run build`.
+
+### Frontend layout
+
+Like the backend, the frontend is organised by model. Each model folder holds
+its data hooks (`api.js`), its reusable `components/` and its `scenes/`
+(full pages that routes point to):
+
+```
+frontend/src/
+├── app/                 App, routes, Layout, Navbar
+├── shared/              API client, helpers, UI kit (Button, Card, Field…), NotFound scene
+└── models/
+    ├── user/            api.js · schemas.js · components/ (AuthProvider, forms…) · scenes/ (Login, Register, Account)
+    ├── category/        api.js · components/ (CategoryPills) · scenes/ (Category)
+    ├── product/         api.js · components/ (ProductCard, ProductBrowser, ProductForm…) · scenes/ (Shop, ProductDetail, MyProducts, ProductEditor)
+    ├── cart/            api.js · components/ (AddToCartForm, CartLine, CartSummary…) · scenes/ (Cart)
+    └── order/           api.js · components/ (CheckoutForm, OrderItemsTable, StatusBadge) · scenes/ (Checkout, Orders, OrderDetail)
+```
+
+Cart and order *items* have no pages of their own, so their UI lives with
+the parent model (`cart/`, `order/`).
+
+The theme is defined once in `src/index.css`: white surfaces, cool greys
+(Tailwind `slate`) and a custom dark blue `navy` scale, with rounded,
+pill-shaped controls throughout.
 
 ## Backend
 

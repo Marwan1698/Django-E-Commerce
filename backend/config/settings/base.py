@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     "drf_spectacular",
+    "core",
     "accounts",
     "catalog",
     "orders",
@@ -148,7 +149,7 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "E-Commerce API",
+    "TITLE": "Bazario API",
     "VERSION": "2.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
