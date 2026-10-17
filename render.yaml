@@ -2,7 +2,7 @@
 # Values marked `sync: false` are asked for once, when the Blueprint is created.
 services:
   - type: web
-    name: estore
+    name: bazario
     runtime: docker
     plan: free
     branch: main
@@ -14,7 +14,7 @@ services:
         sync: false
       - key: DJANGO_ALLOWED_HOSTS # add your custom domain here, comma-separated
         value: localhost
-      - key: DJANGO_CSRF_TRUSTED_ORIGINS # e.g. https://estore.example.com (for the admin)
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS # e.g. https://bazario.example.com (for the admin)
         value: ""
       - key: WEB_CONCURRENCY # 512 MB RAM on the free plan
         value: "2"
