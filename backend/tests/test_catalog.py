@@ -21,7 +21,7 @@ def test_filters_and_search(api, make_product):
 
 def test_anonymous_cannot_create(api, category):
     res = api.post("/api/products/", {"name": "x", "price": "1", "category_id": category.id})
-    assert res.status_code == 403
+    assert res.status_code == 401
 
 
 def test_create_sets_seller_from_session(auth_api, make_user, category):

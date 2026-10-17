@@ -16,7 +16,7 @@ CHECKOUT = {
 
 
 def test_cart_requires_auth(api):
-    assert api.get("/api/cart/").status_code == 403
+    assert api.get("/api/cart/").status_code == 401
 
 
 def test_add_update_remove_cart_items(auth_api, make_product):

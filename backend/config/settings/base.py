@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
@@ -29,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     "drf_spectacular",
     "accounts",
@@ -92,15 +94,10 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Sessions + CSRF cookies (the React app is served from the same origin).
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_HTTPONLY = False  # the SPA reads it and echoes it in X-CSRFToken
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
@@ -122,6 +119,25 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "E-Commerce API",
     "VERSION": "2.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+}
+
+# JWT: the short-lived access token is returned in the JSON body and kept in
+# memory by the SPA; the refresh token lives in an httpOnly cookie scoped to
+# the auth endpoints, so JavaScript (and XSS) can never read it.
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.environ.get("JWT_ACCESS_MINUTES", 10))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ.get("JWT_REFRESH_DAYS", 7))),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+JWT_REFRESH_COOKIE = {
+    "key": "refresh_token",
+    "path": "/api/auth/",
+    "httponly": True,
+    "samesite": "Lax",
+    "secure": env_bool("JWT_REFRESH_COOKIE_SECURE", not DEBUG),
 }
 
 MAX_UPLOAD_IMAGE_SIZE = 5 * 1024 * 1024
