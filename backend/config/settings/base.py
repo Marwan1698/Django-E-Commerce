@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -91,6 +92,37 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Built React app (frontend/dist). When present, Django serves it: WhiteNoise
+# serves its files from "/" and every non-API URL falls back to index.html.
+FRONTEND_DIST = Path(os.environ.get("FRONTEND_DIST", BASE_DIR.parent / "frontend" / "dist"))
+if FRONTEND_DIST.is_dir():
+    WHITENOISE_ROOT = FRONTEND_DIST
+
+
+def WHITENOISE_IMMUTABLE_FILE_TEST(path, url):
+    # Vite puts a content hash in every file name under /assets/.
+    return url.startswith("/assets/")
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
+# Uploaded images go to S3-compatible object storage when a bucket is set
+# (Cloudflare R2, Backblaze B2, Supabase Storage, AWS S3...). Free hosts wipe
+# the local disk on every restart, so local media is for development only.
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")
+USE_S3_MEDIA = bool(AWS_STORAGE_BUCKET_NAME)
+if USE_S3_MEDIA:
+    STORAGES["default"] = {"BACKEND": "storages.backends.s3.S3Storage"}
+    AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL") or None
+    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME") or None
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get("AWS_S3_CUSTOM_DOMAIN") or None  # public bucket URL
+    AWS_QUERYSTRING_AUTH = AWS_S3_CUSTOM_DOMAIN is None  # signed URLs for private buckets
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_LOCATION = os.environ.get("AWS_LOCATION", "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
