@@ -9,7 +9,7 @@ httpOnly refresh-token cookie stays first-party and no CORS setup is needed.
 | App (Docker) | [Render](https://render.com) web service | 512 MB RAM. **Sleeps after 15 min idle**, and the first request after that takes ~1 min. 750 instance-hours per month, enough for one service running all month |
 | Database | [Neon](https://neon.com) Postgres | 1 GB storage per project. Compute pauses when idle and wakes in about a second. **Does not expire**, unlike Render's free Postgres, which is deleted after 30 days |
 | Product images | Any S3-compatible bucket | Optional, but without one, uploads are lost on every restart (Render's free disk is temporary) |
-| Domain | `bazario.onrender.com` by default | Or a free subdomain; see below |
+| Domain | `estore.onrender.com` by default | Or a free subdomain; see below |
 
 > Free tiers change often. Check each provider's pricing page when you sign up.
 
@@ -30,7 +30,7 @@ access key, then note:
 
 | Env var | Example |
 |---|---|
-| `AWS_STORAGE_BUCKET_NAME` | `bazario-media` |
+| `AWS_STORAGE_BUCKET_NAME` | `estore-media` |
 | `AWS_S3_ENDPOINT_URL` | the provider's S3 endpoint, e.g. `https://<account>.r2.cloudflarestorage.com` |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | the access key pair |
 | `AWS_S3_CUSTOM_DOMAIN` | *optional*. The bucket's public host (e.g. `pub-xxxx.r2.dev`). Set it if the bucket is public; leave it empty to use signed URLs |
@@ -75,26 +75,26 @@ allowance.
 
 Then:
 
-1. In Render: **Settings → Custom Domains → Add** `bazario.yourname.is-a.dev`.
+1. In Render: **Settings → Custom Domains → Add** `estore.yourname.is-a.dev`.
    Render shows the DNS record to create (usually a `CNAME` to
    `<service>.onrender.com`) and issues the HTTPS certificate itself.
 2. Create that record wherever the domain's DNS lives.
 3. Add the domain to the service's env vars and redeploy:
-   - `DJANGO_ALLOWED_HOSTS` = `localhost,bazario.yourname.is-a.dev`
-   - `DJANGO_CSRF_TRUSTED_ORIGINS` = `https://bazario.yourname.is-a.dev`
+   - `DJANGO_ALLOWED_HOSTS` = `localhost,estore.yourname.is-a.dev`
+   - `DJANGO_CSRF_TRUSTED_ORIGINS` = `https://estore.yourname.is-a.dev`
 
 ---
 
 ## Running the production image locally
 
 ```bash
-docker build -t bazario .
+docker build -t estore .
 docker run --rm -p 8000:8000 \
   -e DJANGO_SECRET_KEY=change-me-to-a-long-random-string \
   -e DATABASE_URL=sqlite:////tmp/db.sqlite3 \
   -e DJANGO_SECURE_SSL_REDIRECT=false \
   -e JWT_REFRESH_COOKIE_SECURE=false \
-  bazario
+  estore
 ```
 
 Over plain `http://` some browsers drop `Secure` cookies, which is why the

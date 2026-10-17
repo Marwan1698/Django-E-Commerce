@@ -149,7 +149,7 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Bazario API",
+    "TITLE": "eStore API",
     "VERSION": "2.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
