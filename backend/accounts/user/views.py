@@ -58,9 +58,13 @@ class LoginView(AuthView):
 class RefreshView(AuthView):
     """Exchange the refresh cookie for a new access token (and a rotated cookie)."""
 
-    @extend_schema(request=None, responses={200: AccessResponse, 401: None})
+    @extend_schema(request=None, responses={200: AccessResponse, 204: None, 401: None})
     def post(self, request):
-        serializer = TokenRefreshSerializer(data={"refresh": get_refresh_cookie(request) or ""})
+        token = get_refresh_cookie(request)
+        if not token:
+            # Anonymous visitor: nothing to refresh, and not an error.
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = TokenRefreshSerializer(data={"refresh": token})
         try:
             serializer.is_valid(raise_exception=True)
         except (TokenError, AuthenticationFailed, serializers.ValidationError):

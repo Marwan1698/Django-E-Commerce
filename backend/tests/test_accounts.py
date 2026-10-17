@@ -75,8 +75,17 @@ def test_refresh_rotates_and_old_token_is_revoked(api, make_user):
     assert replay.post("/api/auth/refresh/").status_code == 401
 
 
-def test_refresh_without_cookie(api):
-    assert api.post("/api/auth/refresh/").status_code == 401
+def test_refresh_without_cookie_is_a_no_op(api):
+    res = api.post("/api/auth/refresh/")
+    assert res.status_code == 204
+    assert REFRESH_COOKIE not in res.cookies
+
+
+def test_refresh_with_garbage_cookie_clears_it(api):
+    api.cookies[REFRESH_COOKIE] = "garbage"
+    res = api.post("/api/auth/refresh/")
+    assert res.status_code == 401
+    assert res.cookies[REFRESH_COOKIE].value == ""
 
 
 def test_logout_revokes_refresh_token(api, make_user):
