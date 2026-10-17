@@ -1,10 +1,12 @@
-from django.contrib.auth import login, logout, update_session_auth_hash
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
-from drf_spectacular.utils import extend_schema
-from rest_framework import generics, permissions, status
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import generics, permissions, serializers, status
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import (
     ChangePasswordSerializer,
@@ -12,54 +14,80 @@ from .serializers import (
     RegisterSerializer,
     UserSerializer,
 )
+from .tokens import (
+    clear_refresh_cookie,
+    get_refresh_cookie,
+    issue_tokens,
+    revoke_all_tokens,
+    set_refresh_cookie,
+)
+
+AuthResponse = inline_serializer(
+    "AuthResponse", {"access": serializers.CharField(), "user": UserSerializer()}
+)
+AccessResponse = inline_serializer("AccessResponse", {"access": serializers.CharField()})
 
 
-@method_decorator(ensure_csrf_cookie, name="get")
-class CsrfView(APIView):
-    """Sets the csrftoken cookie; the SPA calls this once on start-up."""
-
+class AuthView(APIView):
     permission_classes = [permissions.AllowAny]
-
-    @extend_schema(responses={204: None})
-    def get(self, request):
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    # JSON only: a cross-site HTML form can't send it, which blocks login CSRF.
+    parser_classes = [JSONParser]
 
 
-# DRF only enforces CSRF for authenticated sessions, so the anonymous
-# login/register endpoints opt in explicitly.
-@method_decorator(csrf_protect, name="post")
-class RegisterView(generics.CreateAPIView):
-    serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
+class RegisterView(AuthView):
     throttle_scope = "auth"
 
-    def perform_create(self, serializer):
+    @extend_schema(request=RegisterSerializer, responses={201: AuthResponse})
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        login(self.request, user)
-
-    def create(self, request, *args, **kwargs):
-        super().create(request, *args, **kwargs)
-        return Response(UserSerializer(request.user).data, status=status.HTTP_201_CREATED)
+        return issue_tokens(Response(status=status.HTTP_201_CREATED), user)
 
 
-@method_decorator(csrf_protect, name="post")
-class LoginView(APIView):
-    permission_classes = [permissions.AllowAny]
+class LoginView(AuthView):
     throttle_scope = "auth"
 
-    @extend_schema(request=LoginSerializer, responses=UserSerializer)
+    @extend_schema(request=LoginSerializer, responses=AuthResponse)
     def post(self, request):
         serializer = LoginSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        login(request, serializer.validated_data["user"])
-        return Response(UserSerializer(request.user).data)
+        return issue_tokens(Response(), serializer.validated_data["user"])
 
 
-class LogoutView(APIView):
+class RefreshView(AuthView):
+    """Exchange the refresh cookie for a new access token (and a rotated cookie)."""
+
+    @extend_schema(request=None, responses={200: AccessResponse, 401: None})
+    def post(self, request):
+        serializer = TokenRefreshSerializer(data={"refresh": get_refresh_cookie(request) or ""})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except (TokenError, AuthenticationFailed, serializers.ValidationError):
+            # Missing, expired, revoked, or the user was deactivated.
+            response = Response(
+                {"detail": "Session expired. Please log in again."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            clear_refresh_cookie(response)
+            return response
+        response = Response({"access": serializer.validated_data["access"]})
+        set_refresh_cookie(response, serializer.validated_data["refresh"])
+        return response
+
+
+class LogoutView(AuthView):
     @extend_schema(request=None, responses={204: None})
     def post(self, request):
-        logout(request)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        token = get_refresh_cookie(request)
+        if token:
+            try:
+                RefreshToken(token).blacklist()
+            except TokenError:
+                pass  # already expired or revoked
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+        clear_refresh_cookie(response)
+        return response
 
 
 class MeView(generics.RetrieveUpdateAPIView):
@@ -75,11 +103,13 @@ class ChangePasswordView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     throttle_scope = "auth"
 
-    @extend_schema(request=ChangePasswordSerializer, responses={204: None})
+    @extend_schema(request=ChangePasswordSerializer, responses=AuthResponse)
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        request.user.set_password(serializer.validated_data["new_password"])
-        request.user.save(update_fields=["password"])
-        update_session_auth_hash(request, request.user)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        user = request.user
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        # Sign out every other device, then hand this one a fresh pair.
+        revoke_all_tokens(user)
+        return issue_tokens(Response(), user)

@@ -1,7 +1,7 @@
 from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa: F403
-from .base import SECRET_KEY, env_bool
+from .base import JWT_REFRESH_COOKIE, SECRET_KEY, env_bool
 
 if not SECRET_KEY:
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set in production.")
@@ -16,3 +16,4 @@ SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+JWT_REFRESH_COOKIE = {**JWT_REFRESH_COOKIE, "secure": True}
