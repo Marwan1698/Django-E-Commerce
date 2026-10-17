@@ -6,7 +6,21 @@ products, add others' products to a cart and check out.
 v2 is a rewrite of the original Django-templates app into:
 
 - **`backend/`**: Django 5.2 LTS + Django REST Framework JSON API
-- **`frontend/`**: React + Vite single-page app *(in progress)*
+- **`frontend/`**: React + Vite + TypeScript single-page app
+
+Deploying for free (Render + Neon): see **[DEPLOY.md](DEPLOY.md)**.
+
+## Running locally
+
+Start the backend (below), then in a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev          # http://localhost:5173 (forwards /api and /media to Django on :8000)
+```
+
+Frontend checks: `npm run lint`, `npm test`, `npm run build`.
 
 ## Backend
 
@@ -54,12 +68,13 @@ Each app's `models.py` only re-exports the models so Django can discover them.
 
 | Endpoint | Methods | Notes |
 |---|---|---|
-| `/api/auth/csrf/` | GET | Sets the `csrftoken` cookie; call once on app start |
-| `/api/auth/register/` | POST | Creates the account and logs in |
-| `/api/auth/login/` | POST | `login` (username **or** email) + `password` |
-| `/api/auth/logout/` | POST | |
+| `/api/auth/register/` | POST | Creates the account; returns `{access, user}` + refresh cookie |
+| `/api/auth/login/` | POST | `login` (username **or** email) + `password`; same response |
+| `/api/auth/refresh/` | POST | New access token from the refresh cookie (rotated); 204 if no session |
+| `/api/auth/logout/` | POST | Revokes the refresh token and clears the cookie |
 | `/api/auth/me/` | GET, PATCH | Current user profile |
-| `/api/auth/change-password/` | POST | |
+| `/api/auth/change-password/` | POST | Signs out all other devices; returns a new token pair |
+| `/api/health/` | GET | Health check for the host |
 | `/api/categories/` | GET (all), write (staff) | Looked up by `slug` |
 | `/api/products/` | GET (all), POST (auth) | Filters: `category`, `min_price`, `max_price`, `in_stock`, `search`, `ordering` |
 | `/api/products/{id}/` | GET, PATCH, PUT, DELETE | Only the seller (or staff) can modify |
@@ -71,12 +86,18 @@ Each app's `models.py` only re-exports the models so Django can discover them.
 | `/api/orders/{id}/` | GET | Own orders only |
 | `/api/orders/{id}/cancel/` | POST | Pending orders only; restores stock |
 
-### Authentication
+### Authentication (JWT)
 
-Session cookies + CSRF. The React app is served from the same origin (Vite
-proxies `/api` in development), sends `credentials: "include"`, and echoes the
-`csrftoken` cookie in an `X-CSRFToken` header on unsafe requests. Auth endpoints
-are rate-limited.
+- **Access token** (10 min): returned in the JSON body. The SPA keeps it only
+  in memory and sends it as `Authorization: Bearer <token>`.
+- **Refresh token** (7 days): set as an `httpOnly`, `Secure`, `SameSite=Lax`
+  cookie limited to `/api/auth/`, so JavaScript, and therefore an XSS attack,
+  can never read it. It is rotated on every refresh, and the old token is
+  blacklisted.
+- On page load, and whenever a request gets a 401, the SPA calls
+  `/api/auth/refresh/` once and retries the request.
+- Auth endpoints accept JSON only (which blocks cross-site form posts) and are
+  rate-limited.
 
 ### Configuration
 
