@@ -1,0 +1,38 @@
+# Render Blueprint: Dashboard → New → Blueprint → pick this repo.
+# Values marked `sync: false` are asked for once, when the Blueprint is created.
+services:
+  - type: web
+    name: estore
+    runtime: docker
+    plan: free
+    branch: main
+    healthCheckPath: /api/health/
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL # Neon connection string (postgresql://...?sslmode=require)
+        sync: false
+      - key: DJANGO_ALLOWED_HOSTS # add your custom domain here, comma-separated
+        value: localhost
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS # e.g. https://estore.example.com (for the admin)
+        value: ""
+      - key: WEB_CONCURRENCY # 512 MB RAM on the free plan
+        value: "2"
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+      # S3-compatible storage for product images (leave empty to skip; uploads
+      # will then vanish whenever the free instance restarts).
+      - key: AWS_STORAGE_BUCKET_NAME
+        sync: false
+      - key: AWS_S3_ENDPOINT_URL
+        sync: false
+      - key: AWS_S3_CUSTOM_DOMAIN
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
