@@ -12,6 +12,7 @@ DEMO_PRODUCTS = [
     ("Clothing", "Classic Hoodie", "Heavyweight cotton hoodie.", "39.90", 25),
     ("Clothing", "Running Shoes", "Lightweight daily trainers.", "89.00", 0),
     ("Books", "Two Scoops of Django", "Best practices for Django.", "45.00", 10),
+    ("Home & Kitchen", "Linen Table Lamp", "Warm light with a linen shade.", "54.00", 6),
 ]
 
 

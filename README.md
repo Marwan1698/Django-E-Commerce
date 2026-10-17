@@ -1,6 +1,6 @@
-# Bazario
+# eStore
 
-**Buy and sell, all in one place.** Bazario is an open marketplace: anyone
+**Buy and sell, all in one place.** eStore is an open marketplace: anyone
 can browse, and signed-in users can list their own products, add other
 people's products to a cart and check out.
 

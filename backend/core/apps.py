@@ -7,6 +7,6 @@ class CoreConfig(AppConfig):
     def ready(self):
         from django.contrib import admin
 
-        admin.site.site_header = "Bazario admin"
-        admin.site.site_title = "Bazario admin"
+        admin.site.site_header = "eStore admin"
+        admin.site.site_title = "eStore admin"
         admin.site.index_title = "Marketplace"

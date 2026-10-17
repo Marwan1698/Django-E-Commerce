@@ -35,7 +35,7 @@ export function RegisterScene() {
 
   return (
     <AuthCard
-      title="Join Bazario"
+      title="Join eStore"
       subtitle="Buy and sell in minutes"
       footer={
         <>

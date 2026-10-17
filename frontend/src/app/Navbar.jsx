@@ -55,7 +55,7 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between pr-3 pl-4">
           <Link to="/" className="flex items-center gap-2.5 rounded-full text-xl font-extrabold tracking-tight text-white" onClick={close}>
             <Logo className="size-9" />
-            Bazario
+            eStore
           </Link>
           <nav className="hidden items-center gap-1 md:flex" aria-label="Main">{links}</nav>
           <button

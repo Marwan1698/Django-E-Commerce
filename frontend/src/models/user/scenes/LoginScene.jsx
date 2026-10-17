@@ -37,7 +37,7 @@ export function LoginScene() {
   return (
     <AuthCard
       title="Welcome back"
-      subtitle="Log in to your Bazario account"
+      subtitle="Log in to your eStore account"
       footer={
         <>
           New here?{' '}
