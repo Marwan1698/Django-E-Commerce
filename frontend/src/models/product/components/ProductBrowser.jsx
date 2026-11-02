@@ -1,10 +1,13 @@
+import { useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import { describeError } from '@/shared/api'
 import { Alert } from '@/shared/components/Alert'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { Pagination } from '@/shared/components/Pagination'
+import { Select } from '@/shared/components/Select'
 import { PageSpinner } from '@/shared/components/Spinner'
+import { scrollToElement } from '@/shared/scroll'
 
 import { PAGE_SIZE, useProducts } from '../api'
 import { ProductCard } from './ProductCard'
@@ -20,7 +23,9 @@ const control = 'rounded-full border-0 bg-white py-2.5 text-sm font-medium text-
 
 /**
  * Search, sort, stock filter and a paginated product grid. Filters live in
- * the URL so results can be shared and survive reloads.
+ * the URL so results can be shared and survive reloads. Changing a filter
+ * keeps the scroll position (no jump back to the top of the page) and keeps
+ * the previous results on screen, dimmed, until the new ones arrive.
  */
 export function ProductBrowser({ category }) {
   const [params, setParams] = useSearchParams()
@@ -28,6 +33,16 @@ export function ProductBrowser({ category }) {
   const search = params.get('search') ?? ''
   const ordering = params.get('ordering') ?? ''
   const inStock = params.get('in_stock') === 'true'
+  const top = useRef(null)
+
+  // The search box is a draft until submitted; it follows the URL when that
+  // changes from elsewhere (back button, a category link, …).
+  const [draft, setDraft] = useState(search)
+  const [syncedSearch, setSyncedSearch] = useState(search)
+  if (search !== syncedSearch) {
+    setSyncedSearch(search)
+    setDraft(search)
+  }
 
   const update = (changes) => {
     const next = new URLSearchParams(params)
@@ -36,7 +51,7 @@ export function ProductBrowser({ category }) {
       else next.delete(key)
     }
     if (!('page' in changes)) next.delete('page') // a new filter starts at page 1
-    setParams(next)
+    setParams(next, { preventScrollReset: true })
   }
 
   const products = useProducts({
@@ -47,16 +62,24 @@ export function ProductBrowser({ category }) {
     in_stock: inStock || undefined,
   })
 
+  // New results (filter, sort, page) stagger in. Results already cached when
+  // the grid mounts (e.g. coming back from a product) appear without animating.
+  const shownIds = products.data?.results.map((p) => p.id).join(',')
+  const [idsAtMount] = useState(() => (products.isPending ? null : shownIds))
+  const animateIn = shownIds !== idsAtMount
+
   return (
-    <div className="space-y-6">
+    // min-h: a short result list (one book, or "no products") must not shrink
+    // the page, or the browser would pull the scroll position up and the
+    // filters you just clicked would jump away under the navbar.
+    <div ref={top} className="min-h-[calc(100dvh-7rem)] scroll-mt-28 space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <form
-          key={search /* reset the box when the URL changes, e.g. back button */}
           role="search"
           className="relative flex-1"
           onSubmit={(e) => {
             e.preventDefault()
-            update({ search: String(new FormData(e.currentTarget).get('search') ?? '').trim() })
+            update({ search: draft.trim() })
           }}
         >
           <label htmlFor="search" className="sr-only">Search products</label>
@@ -68,17 +91,17 @@ export function ProductBrowser({ category }) {
             id="search"
             name="search"
             type="search"
-            defaultValue={search}
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value)
+              // Clearing the box (or its ✕ button) clears the search right away.
+              if (!e.target.value && search) update({ search: '' })
+            }}
             placeholder="Search products…"
             className={`${control} w-full pr-4 pl-10`}
           />
         </form>
-        <label htmlFor="ordering" className="sr-only">Sort by</label>
-        <select id="ordering" value={ordering} onChange={(e) => update({ ordering: e.target.value })} className={`${control} pr-10 pl-4`}>
-          {SORTS.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </select>
+        <Select prefix="Sort:" value={ordering} onChange={(value) => update({ ordering: value })} options={SORTS} className="sm:w-60" />
         <label className="flex cursor-pointer items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-medium text-navy-900 ring-1 ring-slate-200">
           <input
             type="checkbox"
@@ -97,14 +120,35 @@ export function ProductBrowser({ category }) {
       ) : products.data.results.length === 0 ? (
         <EmptyState title="No products found">Try a different search or category.</EmptyState>
       ) : (
-        <>
-          <div className={`grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${products.isPlaceholderData ? 'opacity-60' : ''}`}>
-            {products.data.results.map((p) => (
-              <ProductCard key={p.id} product={p} />
+        <div className="relative">
+          {products.isPlaceholderData && (
+            <div className="absolute inset-x-0 -top-3 h-0.5 overflow-hidden rounded-full bg-navy-100" role="status" aria-label="Loading results">
+              <div className="h-full w-2/5 animate-loading-bar rounded-full bg-navy-600" />
+            </div>
+          )}
+          <div
+            key={shownIds}
+            className={`grid grid-cols-1 gap-5 transition duration-300 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${products.isPlaceholderData ? 'opacity-50 saturate-50' : ''}`}
+          >
+            {products.data.results.map((p, i) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                className={animateIn ? 'animate-rise' : ''}
+                style={animateIn ? { animationDelay: `${Math.min(i, 8) * 40}ms` } : undefined}
+              />
             ))}
           </div>
-          <Pagination page={page} pageSize={PAGE_SIZE} count={products.data.count} onChange={(p) => update({ page: String(p) })} />
-        </>
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            count={products.data.count}
+            onChange={(p) => {
+              update({ page: String(p) })
+              scrollToElement(top.current)
+            }}
+          />
+        </div>
       )}
     </div>
   )

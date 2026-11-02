@@ -1,11 +1,26 @@
+import { useParams } from 'react-router'
+
+import { useCategories } from '@/models/category/api'
 import { CategoryPills } from '@/models/category/components/CategoryPills'
 import { useAuth } from '@/models/user/authContext'
 import { ButtonLink } from '@/shared/components/Button'
+import { scrollToElement } from '@/shared/scroll'
+import { NotFoundScene } from '@/shared/scenes/NotFoundScene'
 
 import { ProductBrowser } from '../components/ProductBrowser'
 
+/**
+ * The shop front. Serves both `/` and `/categories/:slug`: the two routes
+ * render this same component, so switching category keeps the hero, the
+ * scroll position and the current grid on screen while the new results load.
+ */
 export function ShopScene() {
   const { user } = useAuth()
+  const { slug } = useParams()
+  const { data: categories } = useCategories()
+  const category = slug ? categories?.find((c) => c.slug === slug) : undefined
+  if (slug && categories && !category) return <NotFoundScene />
+
   return (
     <div className="space-y-8">
       <section className="relative overflow-hidden rounded-[2rem] bg-navy-900 px-6 py-12 text-white sm:px-12 sm:py-16">
@@ -25,6 +40,11 @@ export function ShopScene() {
             </ButtonLink>
             <a
               href="#products"
+              onClick={(e) => {
+                // Scroll without adding #products to the URL / history.
+                e.preventDefault()
+                scrollToElement(document.getElementById('products'))
+              }}
               className="inline-flex items-center rounded-full px-6 py-3 font-semibold text-white ring-1 ring-white/30 transition hover:bg-white/10"
             >
               Browse products
@@ -34,9 +54,19 @@ export function ShopScene() {
       </section>
 
       <section id="products" className="scroll-mt-28 space-y-6">
-        <h2 className="text-2xl font-extrabold tracking-tight">Latest products</h2>
+        {/* Same two lines for "All" and every category, so the pills below never shift. */}
+        <div>
+          <h2 className="text-2xl font-extrabold tracking-tight">
+            {slug ? (category?.name ?? ' ') : 'Latest products'}
+          </h2>
+          <p className="mt-1 text-slate-500">
+            {slug
+              ? category ? `Everything in ${category.name.toLowerCase()}.` : ' '
+              : 'Fresh listings from across the marketplace.'}
+          </p>
+        </div>
         <CategoryPills />
-        <ProductBrowser />
+        <ProductBrowser category={slug} />
       </section>
     </div>
   )

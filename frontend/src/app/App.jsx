@@ -17,6 +17,18 @@ const queryClient = new QueryClient({
   },
 })
 
+// React Router keys the first history entry of every fresh page load as
+// "default", so all fresh visits share one saved scroll position: opening the
+// shop would jump to wherever an earlier visit was left. Give the entry its own
+// key — a reload still restores its position, a new visit starts at the top.
+if (!window.history.state?.key) {
+  const state = window.history.state ?? {}
+  window.history.replaceState(
+    { ...state, usr: state.usr ?? null, key: Math.random().toString(36).slice(2, 10), idx: state.idx ?? 0 },
+    '',
+  )
+}
+
 const router = createBrowserRouter(routes)
 
 export default function App() {

@@ -49,8 +49,9 @@ export function Navbar() {
     </>
   )
 
+  // The gradient hides page content scrolling through the gap above the floating bar.
   return (
-    <header className="sticky top-0 z-20 px-4 pt-4">
+    <header className="sticky top-0 z-20 bg-linear-to-b from-slate-100 from-40% to-transparent px-4 pt-4">
       <div className="mx-auto max-w-6xl rounded-[1.75rem] bg-navy-900/95 shadow-lg shadow-navy-900/15 backdrop-blur">
         <div className="flex h-16 items-center justify-between pr-3 pl-4">
           <Link to="/" className="flex items-center gap-2.5 rounded-full text-xl font-extrabold tracking-tight text-white" onClick={close}>
@@ -72,7 +73,7 @@ export function Navbar() {
           </button>
         </div>
         {open && (
-          <nav id="mobile-nav" className="flex flex-col gap-1 border-t border-white/10 p-3 md:hidden" aria-label="Main">
+          <nav id="mobile-nav" className="flex animate-drop flex-col gap-1 border-t border-white/10 p-3 md:hidden" aria-label="Main">
             {links}
           </nav>
         )}
