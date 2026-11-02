@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { z } from 'zod'
 
@@ -49,6 +49,7 @@ export function ProductForm({ product }) {
   const [formError, setFormError] = useState(null)
   const {
     register,
+    control,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
@@ -71,12 +72,22 @@ export function ProductForm({ product }) {
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
       <Alert>{formError}</Alert>
       <TextField label="Name" error={errors.name} {...register('name')} />
-      <SelectField label="Category" error={errors.category_id} {...register('category_id')}>
-        <option value="">Choose…</option>
-        {categories?.map((c) => (
-          <option key={c.id} value={c.id}>{c.name}</option>
-        ))}
-      </SelectField>
+      <Controller
+        name="category_id"
+        control={control}
+        render={({ field }) => (
+          <SelectField
+            label="Category"
+            error={errors.category_id}
+            placeholder="Choose a category…"
+            options={categories?.map((c) => ({ value: String(c.id), label: c.name })) ?? []}
+            value={field.value}
+            onChange={field.onChange}
+            onBlur={field.onBlur}
+            ref={field.ref}
+          />
+        )}
+      />
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField label="Price (USD)" inputMode="decimal" placeholder="19.99" error={errors.price} {...register('price')} />
         <TextField label="Stock" type="number" min={0} error={errors.stock} {...register('stock')} />

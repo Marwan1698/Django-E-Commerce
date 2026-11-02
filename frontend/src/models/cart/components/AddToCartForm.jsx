@@ -5,6 +5,7 @@ import { useAuth } from '@/models/user/authContext'
 import { describeError } from '@/shared/api'
 import { Alert } from '@/shared/components/Alert'
 import { Button } from '@/shared/components/Button'
+import { QuantityStepper } from '@/shared/components/QuantityStepper'
 
 import { useAddToCart } from '../api'
 
@@ -14,8 +15,6 @@ export function AddToCartForm({ product }) {
   const location = useLocation()
   const addToCart = useAddToCart()
   const [quantity, setQuantity] = useState(1)
-
-  const clamp = (n) => Math.min(product.stock, Math.max(1, n))
 
   return (
     <div className="space-y-4">
@@ -27,35 +26,7 @@ export function AddToCartForm({ product }) {
       )}
       {addToCart.isError && <Alert>{describeError(addToCart.error)}</Alert>}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center rounded-full bg-slate-100 p-1" role="group" aria-label="Quantity">
-          <button
-            type="button"
-            className="flex size-9 items-center justify-center rounded-full text-lg font-bold hover:bg-white disabled:opacity-40"
-            onClick={() => setQuantity((q) => clamp(q - 1))}
-            disabled={quantity <= 1}
-            aria-label="Decrease quantity"
-          >
-            −
-          </button>
-          <input
-            aria-label="Quantity"
-            type="number"
-            min={1}
-            max={product.stock}
-            value={quantity}
-            onChange={(e) => setQuantity(clamp(Number(e.target.value) || 1))}
-            className="w-12 [appearance:textfield] border-0 bg-transparent p-0 text-center font-bold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          />
-          <button
-            type="button"
-            className="flex size-9 items-center justify-center rounded-full text-lg font-bold hover:bg-white disabled:opacity-40"
-            onClick={() => setQuantity((q) => clamp(q + 1))}
-            disabled={quantity >= product.stock}
-            aria-label="Increase quantity"
-          >
-            +
-          </button>
-        </div>
+        <QuantityStepper value={quantity} onChange={setQuantity} max={product.stock} />
         <Button
           size="lg"
           loading={addToCart.isPending}

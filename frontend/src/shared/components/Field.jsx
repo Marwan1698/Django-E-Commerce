@@ -1,5 +1,7 @@
 import { useId } from 'react'
 
+import { Select } from './Select'
+
 const control =
   'block w-full rounded-2xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-navy-900 ring-1 ring-slate-200 ring-inset transition placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-navy-600 aria-invalid:ring-red-300 file:mr-3 file:rounded-full file:border-0 file:bg-navy-900 file:px-4 file:py-1 file:text-sm file:font-semibold file:text-white hover:file:bg-navy-800'
 
@@ -44,14 +46,11 @@ export function TextAreaField({ label, error, hint, ...props }) {
   )
 }
 
-export function SelectField({ label, error, hint, children, ...props }) {
+/** Controlled dropdown field; with react-hook-form, use it inside a Controller. */
+export function SelectField({ label, error, hint, ...props }) {
   return (
     <Field label={label} error={error} hint={hint}>
-      {(a11y) => (
-        <select {...a11y} {...props}>
-          {children}
-        </select>
-      )}
+      {(a11y) => <Select variant="field" {...a11y} className="" {...props} />}
     </Field>
   )
 }
