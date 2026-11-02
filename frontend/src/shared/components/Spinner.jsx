@@ -9,7 +9,8 @@ export function Spinner({ className = 'size-6' }) {
 
 export function PageSpinner() {
   return (
-    <div className="flex justify-center py-24 text-navy-700" role="status" aria-label="Loading">
+    // min-h keeps the footer from flashing up while a page loads.
+    <div className="flex min-h-[60vh] animate-fade-in items-center justify-center text-navy-700 [animation-delay:150ms]" role="status" aria-label="Loading">
       <Spinner className="size-8" />
     </div>
   )

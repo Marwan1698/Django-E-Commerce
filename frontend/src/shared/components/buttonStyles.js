@@ -15,7 +15,7 @@ const sizes = {
 /** Classes for anything that should look like a button (buttons and links). */
 export function buttonClasses({ variant = 'primary', size = 'md', className = '' } = {}) {
   return [
-    'inline-flex items-center justify-center gap-2 rounded-full font-semibold transition',
+    'inline-flex items-center justify-center gap-2 rounded-full font-semibold transition duration-150 ease-snappy active:scale-[0.97]',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-600',
     'disabled:cursor-not-allowed disabled:opacity-50',
     variants[variant],

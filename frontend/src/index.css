@@ -16,6 +16,64 @@
   --color-navy-800: #1d2f53;
   --color-navy-900: #13213d;
   --color-navy-950: #0b1427;
+
+  /* Motion: one easing curve and a few named entrances, used everywhere. */
+  --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-page-in: page-in 0.35s var(--ease-snappy) both;
+  --animate-rise: rise 0.4s var(--ease-snappy) both;
+  --animate-drop: drop 0.2s var(--ease-snappy) both;
+  --animate-pop: pop 0.25s var(--ease-snappy) both;
+  --animate-fade-in: fade-in 0.2s ease-out both;
+  --animate-loading-bar: loading-bar 1s ease-in-out infinite;
+
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(8px); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  }
+  @keyframes drop {
+    from { opacity: 0; transform: translateY(-6px); }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.85); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+  }
+  @keyframes loading-bar {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(250%); }
+  }
+}
+
+/* Card -> product page: the card picture grows into the product picture
+   (React Router view transitions; browsers without support just navigate). */
+::view-transition-group(*) {
+  animation-duration: 0.4s;
+  animation-timing-function: var(--ease-snappy);
+}
+::view-transition-old(product-image),
+::view-transition-new(product-image) {
+  height: 100%;
+  object-fit: cover;
+  overflow: clip;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
 @layer base {

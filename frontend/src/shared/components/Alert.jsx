@@ -9,7 +9,7 @@ export function Alert({ tone = 'error', children }) {
   return (
     <div
       role={tone === 'error' ? 'alert' : 'status'}
-      className={`rounded-2xl px-4 py-3 text-sm font-medium ring-1 ring-inset ${tones[tone]}`}
+      className={`animate-rise rounded-2xl px-4 py-3 text-sm font-medium ring-1 ring-inset ${tones[tone]}`}
     >
       {children}
     </div>
