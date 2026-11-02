@@ -29,11 +29,11 @@ export function ProductDetailScene() {
     <div className="space-y-6">
       <BackLink to="/">Back to shop</BackLink>
       <Card className="grid gap-8 p-3 md:grid-cols-2 md:p-4">
-        <ProductImage product={product} className="aspect-square w-full rounded-[1.5rem]" />
+        <ProductImage product={product} loading="eager" style={{ viewTransitionName: 'product-image' }} className="aspect-square w-full rounded-[1.5rem]" />
         <div className="flex flex-col gap-5 p-3 md:p-6">
           <div>
             <Link
-              to={`/categories/${product.category.slug}`}
+              to={`/categories/${product.category.slug}#products`}
               className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold tracking-wide text-slate-600 uppercase hover:bg-navy-50"
             >
               {product.category.name}

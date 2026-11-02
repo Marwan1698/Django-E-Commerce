@@ -14,11 +14,23 @@ export function useProducts(query) {
 }
 
 export function useProduct(id) {
+  const queryClient = useQueryClient()
   return useQuery({
     queryKey: ['products', 'detail', String(id)],
     queryFn: () => api(`/api/products/${id}/`),
     enabled: id !== undefined,
+    // Open instantly with what the shop grid already loaded; the fresh copy
+    // from the API replaces it a moment later.
+    placeholderData: () => findInProductLists(queryClient, id),
   })
+}
+
+function findInProductLists(queryClient, id) {
+  for (const [, data] of queryClient.getQueriesData({ queryKey: ['products'] })) {
+    const hit = data?.results?.find((p) => String(p.id) === String(id))
+    if (hit) return hit
+  }
+  return undefined
 }
 
 export function useMyProducts(page) {

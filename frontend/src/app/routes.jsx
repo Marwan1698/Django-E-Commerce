@@ -1,13 +1,15 @@
 import { lazy, Suspense } from 'react'
 
 import { RequireAuth, GuestOnly } from '@/models/user/components/RequireAuth'
+import { ProductDetailScene } from '@/models/product/scenes/ProductDetailScene'
 import { ShopScene } from '@/models/product/scenes/ShopScene'
 import { PageSpinner } from '@/shared/components/Spinner'
 import { NotFoundScene } from '@/shared/scenes/NotFoundScene'
 
 import { Layout } from './Layout'
 
-// Every scene except the shop front is loaded on demand.
+// Scenes load on demand, except the shop and the product page it opens
+// (bundled together so opening a product never waits on a code download).
 function scene(load, name) {
   // eslint-disable-next-line react/only-export-components -- route helper, not a component module
   const Scene = lazy(() => load().then((m) => ({ default: m[name] })))
@@ -22,9 +24,10 @@ export const routes = [
   {
     element: <Layout />,
     children: [
-      { index: true, element: <ShopScene /> },
-      { path: 'categories/:slug', element: scene(() => import('@/models/category/scenes/CategoryScene'), 'CategoryScene') },
-      { path: 'products/:id', element: scene(() => import('@/models/product/scenes/ProductDetailScene'), 'ProductDetailScene') },
+      { index: true, element: <ShopScene />, handle: { page: 'shop' } },
+      // Same component as the index route, so switching category doesn't remount the page.
+      { path: 'categories/:slug', element: <ShopScene />, handle: { page: 'shop' } },
+      { path: 'products/:id', element: <ProductDetailScene /> },
       {
         element: <GuestOnly />,
         children: [
